@@ -1,0 +1,3 @@
+import { describe,expect,it } from "vitest";import { AppError,mapError } from "../lib/errors";import { sampleAnalysis } from "../lib/mock-analysis";
+describe("error mapping",()=>{it("preserves app errors",()=>expect(mapError(new AppError("UPLOAD_FAILED","Try again",422)).status).toBe(422));it("maps rate limits",()=>expect(mapError(new Error("HTTP 429 rate limit")).code).toBe("RATE_LIMITED"));it("maps timeouts",()=>expect(mapError(new Error("request timeout")).code).toBe("AI_TIMEOUT"));});
+describe("demo mode",()=>{it("provides a complete, valid sample without claiming real analysis",()=>{expect(sampleAnalysis.timelineIssues.length).toBeGreaterThan(0);expect(sampleAnalysis.disclaimer).toMatch(/cannot guarantee/i);});});
