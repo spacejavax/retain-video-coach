@@ -7,9 +7,11 @@ import { sampleAnalysis } from "../../lib/mock-analysis";
 import type { Analysis } from "../../lib/schema";
 import { validateVideo } from "../../lib/upload-validation";
 import { usePrefersReducedMotion } from "../../lib/use-prefers-reduced-motion";
+import type { COBEOptions } from "cobe";
 import { Button } from "../../components/ui/button";
 import { BlurFade } from "../../components/ui/blur-fade";
 import { BorderBeam } from "../../components/ui/border-beam";
+import { Globe } from "../../components/ui/globe";
 import { MagicCard } from "../../components/ui/magic-card";
 import { NumberTicker } from "../../components/ui/number-ticker";
 import { Particles } from "../../components/ui/particles";
@@ -38,6 +40,42 @@ type FormState = {
 const stages = ["Laddar upp video", "Läser inledningen", "Granskar tempot", "Markerar svaga ögonblick", "Skriver din redigering"];
 const platformOptions = ["TikTok", "Instagram Reels", "YouTube Shorts"] as const;
 const goalOptions = ["views", "engagement", "followers", "conversions"] as const;
+
+const workflowSteps = [
+  { title: "Ladda upp utkastet", body: "Dra in ett råklipp i MP4, MOV eller WEBM — upp till 90 sekunder, oavsett var du filmar det." },
+  { title: "Retain analyserar bild för bild", body: "Hook, tempo, tydlighet och avslutning granskas mot vad som faktiskt håller kvar tittare." },
+  { title: "Få en redigering med tidsstämplar", body: "Konkreta ändringar, redo att klippa in — ingen gissningslek om vad som saknades." },
+];
+
+const RETAIN_GLOBE_CONFIG: COBEOptions = {
+  width: 800,
+  height: 800,
+  onRender: () => {},
+  devicePixelRatio: 2,
+  phi: 0,
+  theta: 0.32,
+  dark: 1,
+  diffuse: 1.2,
+  mapSamples: 16000,
+  mapBrightness: 6,
+  baseColor: [0.09, 0.09, 0.11],
+  markerColor: [216 / 255, 74 / 255, 49 / 255],
+  glowColor: [216 / 255, 74 / 255, 49 / 255],
+  markers: [
+    { location: [14.5995, 120.9842], size: 0.03 },
+    { location: [19.076, 72.8777], size: 0.1 },
+    { location: [23.8103, 90.4125], size: 0.05 },
+    { location: [30.0444, 31.2357], size: 0.07 },
+    { location: [39.9042, 116.4074], size: 0.08 },
+    { location: [-23.5505, -46.6333], size: 0.1 },
+    { location: [19.4326, -99.1332], size: 0.1 },
+    { location: [40.7128, -74.006], size: 0.1 },
+    { location: [34.6937, 135.5022], size: 0.05 },
+    { location: [41.0082, 28.9784], size: 0.06 },
+    { location: [59.3293, 18.0686], size: 0.05 },
+    { location: [51.5072, -0.1276], size: 0.07 },
+  ],
+};
 
 function Brand({ onClick }: { onClick?: () => void }) {
   return (
@@ -188,6 +226,70 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           <DemoConsole />
         </Reveal>
       </main>
+      <Reveal>
+        <div className="relative z-10 grid grid-cols-1 divide-y divide-border border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {[
+            { label: "AI-MOTOR", value: "Gemini 2.5" },
+            { label: "EFTER ANALYS", value: "Videon raderas" },
+            { label: "FEEDBACKFORMAT", value: "Tidsstämplad, inte generisk" },
+          ].map(item => (
+            <div key={item.label} className="flex items-center justify-between gap-4 px-5 py-4 md:px-10">
+              <span className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">{item.label}</span>
+              <span className="text-right text-xs font-medium text-foreground">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+      <section id="workflow" className="relative z-10 border-b border-border">
+        <div className="mx-auto grid max-w-6xl gap-14 px-5 py-20 md:grid-cols-[.95fr_1.05fr] md:items-center md:py-28">
+          <Reveal>
+            <div>
+              <p className="flex items-center gap-2 font-mono text-[10px] tracking-[.14em] text-muted-foreground">
+                <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 12px var(--primary)" }} /> SÅ FUNKAR DET
+              </p>
+              <h2 className="display-text mt-6 text-4xl md:text-5xl">Byggt för skapare, var du än filmar.</h2>
+              <p className="body-text mt-5">Retain granskar din video mot samma retentionsmönster oavsett tidszon, nisch eller plattform.</p>
+              <ol className="mt-10 border-t border-border">
+                {workflowSteps.map((step, index) => (
+                  <li key={step.title} className="flex gap-4 border-b border-border py-5">
+                    <span className="mt-0.5 shrink-0 font-mono text-[10px] text-primary">0{index + 1}</span>
+                    <div>
+                      <strong className="text-sm font-medium text-foreground">{step.title}</strong>
+                      <p className="mt-1 text-xs text-muted-foreground">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <div>
+              <div className="relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-lg border border-border bg-card">
+                <Beam />
+                <Globe config={RETAIN_GLOBE_CONFIG} className="!inset-auto !size-full cursor-grab active:cursor-grabbing" />
+                <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_center,transparent_60%,var(--card)_100%)]" />
+              </div>
+              <p className="mt-3 text-center font-mono text-[8px] tracking-[.08em] text-muted-foreground">DRA FÖR ATT ROTERA</p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+      <section className="relative z-10 overflow-hidden">
+        <Particles className="absolute inset-0 -z-10" quantity={40} color="#d84a31" size={0.4} ease={70} />
+        <div className="mx-auto max-w-2xl px-5 py-24 text-center md:py-32">
+          <Reveal>
+            <h2 className="display-text text-4xl md:text-5xl">Sluta gissa vad som tappar tittarna.</h2>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <p className="body-text mx-auto mt-5">Ladda upp ett utkast och få en tidsstämplad redigering på under en minut.</p>
+          </Reveal>
+          <Reveal delay={0.16}>
+            <div className="mt-9 flex justify-center">
+              <Button variant="default" size="lg" className="h-12 px-6" onClick={onStart}>Analysera din video <ArrowRight /></Button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
     </div>
   );
 }
