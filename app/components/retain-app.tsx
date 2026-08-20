@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Check, FileVideo, Pause, Play, ShieldCheck, Upload, X } from "lucide-react";
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { motion, useMotionValue, useSpring } from "motion/react";
+import { Activity, ArrowRight, Check, Clock, FileVideo, Pause, Play, Scissors, ShieldCheck, Sparkles, TrendingUp, Upload, Users, X } from "lucide-react";
 import { copy } from "../../lib/copy";
 import { sampleAnalysis } from "../../lib/mock-analysis";
 import type { Analysis } from "../../lib/schema";
@@ -12,9 +13,12 @@ import { Button } from "../../components/ui/button";
 import { BlurFade } from "../../components/ui/blur-fade";
 import { BorderBeam } from "../../components/ui/border-beam";
 import { Globe } from "../../components/ui/globe";
+import { Iphone } from "../../components/ui/iphone";
 import { MagicCard } from "../../components/ui/magic-card";
 import { NumberTicker } from "../../components/ui/number-ticker";
 import { Particles } from "../../components/ui/particles";
+import { ContainerTextFlip } from "../../components/ui/container-text-flip";
+import { ContainerScroll } from "../../components/ui/container-scroll-animation";
 import { AnalysisReport } from "./report";
 
 function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
@@ -29,6 +33,36 @@ function Beam() {
   return <BorderBeam size={90} duration={7} colorFrom="#d84a31" colorTo="#ff8f6b" />;
 }
 
+function TiltCard({ children, className }: { children: ReactNode; className?: string }) {
+  const reducedMotion = usePrefersReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const springX = useSpring(rotateX, { stiffness: 220, damping: 20, mass: 0.6 });
+  const springY = useSpring(rotateY, { stiffness: 220, damping: 20, mass: 0.6 });
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (reducedMotion || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width - 0.5;
+    const py = (event.clientY - rect.top) / rect.height - 0.5;
+    rotateY.set(px * 20);
+    rotateX.set(py * -20);
+  }
+  function handlePointerLeave() {
+    rotateX.set(0);
+    rotateY.set(0);
+  }
+
+  return (
+    <div ref={ref} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave} className={className} style={{ perspective: 900 }}>
+      <motion.div style={{ rotateX: reducedMotion ? 0 : springX, rotateY: reducedMotion ? 0 : springY, transformStyle: "preserve-3d" }}>
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
 type View = "landing" | "form" | "loading" | "report";
 type FormState = {
   platform: "TikTok" | "Instagram Reels" | "YouTube Shorts";
@@ -40,6 +74,52 @@ type FormState = {
 const stages = ["Laddar upp video", "Läser inledningen", "Granskar tempot", "Markerar svaga ögonblick", "Skriver din redigering"];
 const platformOptions = ["TikTok", "Instagram Reels", "YouTube Shorts"] as const;
 const goalOptions = ["views", "engagement", "followers", "conversions"] as const;
+
+const useCases = [
+  {
+    icon: Activity,
+    title: "Se exakt var tittarna hoppar av",
+    body: "En sekundvis retentionskurva markerar varje dropp — inte bara en poäng, utan orsaken bakom den.",
+    span: "sm:col-span-4 sm:row-span-2",
+    featured: true,
+  },
+  {
+    icon: Sparkles,
+    title: "Hook-granskning",
+    body: "De första 3 sekunderna dissekerade mot vad som faktiskt får folk att stanna kvar.",
+    span: "sm:col-span-2",
+  },
+  {
+    icon: Clock,
+    title: "Tempoanalys",
+    body: "Hittar segmenten som drar ut på tiden innan tittaren märker det själv.",
+    span: "sm:col-span-2",
+  },
+  {
+    icon: Scissors,
+    title: "Redigering med tidsstämplar",
+    body: "Konkreta klipp, inte vaga tips — klistra in tiderna direkt i din editor.",
+    span: "sm:col-span-3",
+  },
+  {
+    icon: Users,
+    title: "Anpassat efter din nisch",
+    body: "Feedbacken viktas mot din plattform, målgrupp och mål — inte en generisk mall.",
+    span: "sm:col-span-3",
+  },
+  {
+    icon: TrendingUp,
+    title: "Före / efter-poäng",
+    body: "Se retentionslyftet varje föreslagen ändring ger innan du klipper något alls.",
+    span: "sm:col-span-2",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Raderas efter analys",
+    body: "Din video bearbetas för den här redigeringen och läggs aldrig i ett bibliotek.",
+    span: "sm:col-span-4",
+  },
+];
 
 const workflowSteps = [
   { title: "Ladda upp utkastet", body: "Dra in ett råklipp i MP4, MOV eller WEBM — upp till 90 sekunder, oavsett var du filmar det." },
@@ -139,17 +219,29 @@ function DemoConsole() {
       </div>
       <div className="grid gap-0 sm:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)]">
         <div className="flex flex-col gap-3 border-b border-border p-4 sm:border-b-0 sm:border-r">
-          <div className="relative mx-auto aspect-[9/16] w-40 overflow-hidden rounded-md">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#2a1512] via-[#1a1110] to-[#0d0b0a]" />
-            <div className="absolute left-1/2 top-[40%] h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-2xl" />
-            <div className="absolute inset-x-[18%] top-[24%] bottom-[32%] rounded-sm border border-primary/70">
-              <span className="absolute -top-[18px] left-0 rounded-t-sm bg-primary px-1.5 py-0.5 font-mono text-[7px] font-semibold tracking-wide text-primary-foreground">MOTIV</span>
+          <TiltCard className="mx-auto w-40 cursor-default drop-shadow-[0_24px_38px_rgba(0,0,0,.55)]">
+            <Iphone className="w-full">
+            <div className="relative size-full">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#2a1512] via-[#1a1110] to-[#0d0b0a]" />
+              <div className="absolute left-1/2 top-[42%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-2xl" />
+
+              {/* creator silhouette, holding a phone up to film */}
+              <div className="absolute left-1/2 top-[24%] h-10 w-10 -translate-x-1/2 rounded-full bg-black/65" />
+              <div className="absolute left-1/2 top-[32%] h-[76px] w-16 -translate-x-1/2 rounded-t-[46%] bg-black/65" />
+              <div className="absolute left-[29%] top-[30%] h-11 w-6 -rotate-[12deg] rounded-[3px] border border-primary/80 bg-black/80 shadow-[0_0_14px_rgba(216,74,49,.55)]">
+                <div className="absolute inset-[2px] rounded-[1px] bg-primary/40 blur-[1.5px]" />
+              </div>
+
+              <div className="absolute inset-x-[13%] top-[19%] bottom-[38%] rounded-sm border border-primary/70">
+                <span className="absolute -top-[18px] left-0 rounded-t-sm bg-primary px-1.5 py-0.5 font-mono text-[7px] font-semibold tracking-wide text-primary-foreground">MOTIV</span>
+              </div>
+              <span className="absolute right-2 top-2 rounded bg-black/50 px-1.5 py-0.5 font-mono text-[8px] text-foreground/80">00:05.2</span>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2.5 pb-2.5 pt-8">
+                <span className="block text-center text-[11px] leading-snug text-foreground/90">”En del undrar hur jag...”</span>
+              </div>
             </div>
-            <span className="absolute right-2 top-2 rounded bg-black/50 px-1.5 py-0.5 font-mono text-[8px] text-foreground/80">00:05.2</span>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2.5 pb-2.5 pt-8">
-              <span className="block text-center text-[11px] leading-snug text-foreground/90">”En del undrar hur jag...”</span>
-            </div>
-          </div>
+            </Iphone>
+          </TiltCard>
           <div className="flex items-center gap-3">
             <button type="button" className="grid h-7 w-7 shrink-0 place-items-center rounded border border-border text-foreground" onClick={() => setPlaying(value => !value)} aria-label={playing ? "Pausa exempelanalys" : "Spela upp exempelanalys"}>
               {playing ? <Pause className="size-3" /> : <Play className="size-3" />}
@@ -185,6 +277,117 @@ function DemoConsole() {
   );
 }
 
+function UseCases() {
+  return (
+    <section id="use-cases" className="relative z-10 overflow-hidden border-b border-border bg-[#0a0a0b]">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-[140px]" aria-hidden="true" />
+      <Particles className="absolute inset-0 -z-0" quantity={70} color="#d84a31" size={0.45} ease={70} />
+      <div className="relative mx-auto max-w-6xl px-5 py-20 md:py-28">
+        <Reveal className="mx-auto max-w-xl text-center">
+          <p className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-[.14em] text-muted-foreground">
+            <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 12px var(--primary)" }} /> ANVÄNDNINGSOMRÅDEN
+          </p>
+          <h2 className="display-text mt-6 text-4xl md:text-5xl">Ett verktyg, varje anledning tittarna slutar titta.</h2>
+          <p className="body-text mx-auto mt-5">Från hooken till sista sekunden — Retain granskar det som faktiskt avgör om videon håller.</p>
+        </Reveal>
+
+        <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-6">
+          {useCases.map((item, index) => (
+            <Reveal key={item.title} delay={0.05 * index} className={item.span}>
+              <MagicCard
+                className="group relative flex h-full min-h-44 flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-6 transition-colors hover:border-primary/40"
+                gradientColor="#1a1a1f"
+                gradientFrom="#d84a31"
+                gradientTo="#a43120"
+                gradientOpacity={0.6}
+              >
+                {item.featured && <Beam />}
+                <div className="flex items-center justify-between">
+                  <span className="grid size-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-primary transition-transform duration-300 group-hover:scale-110">
+                    <item.icon className="size-4.5" />
+                  </span>
+                  {item.featured && (
+                    <span className="hidden items-center gap-3 font-mono text-[9px] text-muted-foreground sm:flex">
+                      <span className="flex items-baseline gap-1">
+                        <NumberTicker value={61} className="text-lg tabular-nums text-foreground" />
+                        <ArrowRight className="size-3 text-primary" />
+                        <NumberTicker value={78} className="text-lg tabular-nums text-primary" />
+                      </span>
+                    </span>
+                  )}
+                </div>
+                <div className="mt-8">
+                  <h3 className={`font-serif font-medium tracking-tight text-foreground ${item.featured ? "text-2xl" : "text-lg"}`}>{item.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+                </div>
+                {item.featured && (
+                  <div className="mt-6 flex h-14 items-end gap-[3px]" aria-hidden="true">
+                    {[38, 52, 44, 61, 55, 70, 48, 66, 40, 58, 72, 50, 63, 45, 68, 80, 30, 20, 26, 18].map((height, i) => (
+                      <i
+                        key={i}
+                        className={`w-full rounded-t-sm transition-all duration-500 ${i > 15 ? "bg-primary shadow-[0_0_10px_rgba(216,74,49,.6)]" : "bg-white/15"}`}
+                        style={{ height: `${height}%` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </MagicCard>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReportPreview({ onDemo }: { onDemo: () => void }) {
+  const result = sampleAnalysis;
+  return (
+    <section className="relative z-10 border-b border-border bg-background">
+      <ContainerScroll
+        titleComponent={
+          <div>
+            <p className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-[.14em] text-muted-foreground">
+              <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 12px var(--primary)" }} /> RAPPORTEN DU FÅR
+            </p>
+            <h2 className="display-text mt-6 text-4xl md:text-5xl">Ingen generisk feedback. <span className="text-muted-foreground">En redigerbar plan.</span></h2>
+          </div>
+        }
+      >
+        <div className="grid h-full grid-cols-1 overflow-hidden md:grid-cols-[220px_1fr]">
+          <div className="flex flex-col items-center justify-center gap-3 border-b border-border p-6 text-center md:border-b-0 md:border-r">
+            <div
+              className="relative grid h-28 w-28 place-items-center rounded-full md:h-32 md:w-32"
+              style={{ background: `conic-gradient(var(--primary) ${result.overallScore * 3.6}deg, var(--border) 0)` }}
+            >
+              <div className="absolute inset-2.5 rounded-full bg-background" />
+              <NumberTicker value={result.overallScore} className="z-10 font-mono text-3xl tabular-nums md:text-4xl" />
+              <span className="absolute bottom-7 z-10 font-mono text-[8px] text-muted-foreground md:bottom-8">/100</span>
+            </div>
+            <p className="font-mono text-[8px] tracking-[.08em] text-muted-foreground">RETENTIONSPOTENTIAL</p>
+            <b className="font-serif text-base italic text-primary md:text-lg">{copy.scoreLabels[result.scoreLabel]}</b>
+          </div>
+          <div className="flex flex-col overflow-y-auto p-5 md:p-8">
+            <p className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">REDAKTÖRENS BEDÖMNING</p>
+            <h3 className="display-text mt-2 text-xl md:text-3xl">{result.summary}</h3>
+            <div className="mt-4 space-y-2 border-t border-border pt-4">
+              {result.priorityActions.slice(0, 3).map((action, index) => (
+                <div key={action} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3">
+                  <span className="mt-0.5 shrink-0 font-mono text-[10px] text-primary">0{index + 1}</span>
+                  <p className="text-xs leading-relaxed md:text-sm">{action}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ContainerScroll>
+      <div className="mx-auto -mt-6 max-w-6xl px-5 pb-16 text-center md:-mt-16 md:pb-24">
+        <button className="border-0 border-b border-foreground bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-foreground" onClick={onDemo}>Se hela exempelrapporten ↗</button>
+      </div>
+    </section>
+  );
+}
+
 function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void }) {
   return (
     <div className="page-enter min-h-screen bg-background text-foreground">
@@ -195,6 +398,7 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#product">Produkt</a>
           <button className="text-xs text-muted-foreground hover:text-foreground" onClick={onDemo}>Exempelrapport</button>
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#workflow">Så funkar det</a>
+          <a className="text-xs text-muted-foreground hover:text-foreground" href="#use-cases">Användningsområden</a>
         </nav>
         <Button variant="default" size="sm" onClick={onStart}>Analysera video <ArrowRight /></Button>
       </header>
@@ -207,7 +411,19 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
             </p>
           </Reveal>
           <Reveal delay={0.08}>
-            <h1 className="display-text mt-6 text-5xl md:text-7xl">Se var tittarna hoppar av <span className="text-muted-foreground">innan du publicerar.</span></h1>
+            <h1 className="display-text mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 text-5xl md:text-7xl">
+              <span>Se var</span>
+              <span className="inline-flex w-[5em] justify-center text-5xl md:w-[4.6em] md:text-7xl">
+                <ContainerTextFlip
+                  words={["hooken", "tempot"]}
+                  interval={2600}
+                  className="rounded-md border border-primary/40 px-2 pt-2 pb-3 text-5xl text-primary md:text-7xl [background:rgba(216,74,49,.1)!important] dark:[background:rgba(216,74,49,.1)!important] [box-shadow:inset_0_0_0_1px_rgba(216,74,49,.25),0_0_24px_rgba(216,74,49,.25)!important] dark:[box-shadow:inset_0_0_0_1px_rgba(216,74,49,.25),0_0_24px_rgba(216,74,49,.25)!important]"
+                  textClassName="font-serif font-medium !text-primary"
+                />
+              </span>
+              <span>tappar tittarna</span>
+              <span className="text-muted-foreground">innan du publicerar.</span>
+            </h1>
           </Reveal>
           <Reveal delay={0.16}>
             <p className="body-text mt-6">Ladda upp ett utkast. Retain analyserar videon, markerar ögonblicken som försvagar retentionen och ger dig exakta redigeringar med tidsstämplar.</p>
@@ -240,6 +456,7 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           ))}
         </div>
       </Reveal>
+      <ReportPreview onDemo={onDemo} />
       <section id="workflow" className="relative z-10 border-b border-border">
         <div className="mx-auto grid max-w-6xl gap-14 px-5 py-20 md:grid-cols-[.95fr_1.05fr] md:items-center md:py-28">
           <Reveal>
@@ -274,6 +491,7 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           </Reveal>
         </div>
       </section>
+      <UseCases />
       <section className="relative z-10 overflow-hidden">
         <Particles className="absolute inset-0 -z-10" quantity={40} color="#d84a31" size={0.4} ease={70} />
         <div className="mx-auto max-w-2xl px-5 py-24 text-center md:py-32">
@@ -294,6 +512,18 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
   );
 }
 
+function IntakeSectionHeading({ index, eyebrow, title }: { index: string; eyebrow: string; title: string }) {
+  return (
+    <div className="mb-6 flex items-baseline gap-4">
+      <span className="font-mono text-xs text-primary">{index}</span>
+      <div>
+        <p className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">{eyebrow}</p>
+        <h2 className="mt-1 font-serif text-2xl font-medium">{title}</h2>
+      </div>
+    </div>
+  );
+}
+
 function SegmentedField<T extends string>({ legend, options, value, onChange, labels }: { legend: string; options: readonly T[]; value: T; onChange: (value: T) => void; labels?: Record<T, string> }) {
   return (
     <fieldset className="mt-6 border-0 p-0">
@@ -304,7 +534,7 @@ function SegmentedField<T extends string>({ legend, options, value, onChange, la
             type="button"
             key={option}
             aria-pressed={value === option}
-            className={`min-h-11 border-r border-border px-2 text-xs transition-colors last:border-r-0 ${value === option ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
+            className={`min-h-12 border-r border-border px-2 font-serif text-[15px] tracking-tight transition-colors last:border-r-0 ${value === option ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
             onClick={() => onChange(option)}
           >
             {labels ? labels[option] : option[0].toUpperCase() + option.slice(1)}
@@ -324,7 +554,8 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
       <SiteHeader demoMode={demoMode} onHome={onHome} onDemo={onDemo} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8 md:px-10">
         <button className="border-0 bg-transparent p-0 font-mono text-[9px] tracking-[.08em] text-muted-foreground hover:text-foreground" onClick={onHome}>← TILLBAKA</button>
-        <div className="border-b border-border py-10">
+        <div className="relative overflow-hidden border-b border-border py-10">
+          <Particles className="absolute -inset-x-10 -inset-y-10 -z-10" quantity={35} color="#d84a31" size={0.45} ease={70} />
           <p className="font-mono text-[10px] tracking-[.1em] text-primary">NY REDIGERING / 001</p>
           <h1 className="display-text mt-4 text-4xl md:text-6xl">Ge oss råklippet.</h1>
           <p className="body-text mt-4">Lägg till tillräckligt med sammanhang för användbara kommentarer. Retain sköter genomgången bild för bild.</p>
@@ -342,10 +573,7 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
 
         <form onSubmit={event => { event.preventDefault(); onAnalyse(); }}>
           <section className="border-t border-border py-10">
-            <div className="mb-6 flex items-baseline justify-between">
-              <strong className="font-serif text-2xl font-medium">Lägg till ditt utkast</strong>
-              <span className="font-mono text-[9px] text-muted-foreground">En vertikal video</span>
-            </div>
+            <IntakeSectionHeading index="01" eyebrow="EN VERTIKAL VIDEO" title="Lägg till ditt utkast" />
             <MagicCard className="rounded-lg" gradientColor="#16161b" gradientFrom="#d84a31" gradientTo="#a43120" gradientOpacity={0.5}>
               <label
                 className={`relative flex cursor-pointer flex-col items-center justify-center gap-1.5 border border-dashed border-transparent bg-card transition-colors hover:border-primary/60 ${file ? "h-28 flex-row justify-start gap-4 px-5" : "h-52 text-center"}`}
@@ -376,22 +604,23 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
           </section>
 
           <section className="border-t border-border py-10">
-            <div className="mb-6 flex items-baseline justify-between">
-              <strong className="font-serif text-2xl font-medium">Ange sammanhang</strong>
-              <span className="font-mono text-[9px] text-muted-foreground">Så att redigeringen passar din målgrupp</span>
-            </div>
-            <SegmentedField legend="Plattform" options={platformOptions} value={form.platform} onChange={platform => onForm({ ...form, platform })} />
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-2">
-                <span className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">Innehållsnisch</span>
-                <input required value={form.niche} onChange={event => onForm({ ...form, niche: event.target.value })} placeholder="Privatekonomi" className="h-12 rounded-lg border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50" />
-              </label>
-              <label className="flex flex-col gap-2">
-                <span className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">Målgrupp</span>
-                <input required value={form.audience} onChange={event => onForm({ ...form, audience: event.target.value })} placeholder="Nybörjarinvesterare" className="h-12 rounded-lg border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50" />
-              </label>
-            </div>
-            <SegmentedField legend="Huvudmål" options={goalOptions} value={form.goal} onChange={goal => onForm({ ...form, goal })} labels={copy.goals} />
+            <IntakeSectionHeading index="02" eyebrow="SÅ ATT REDIGERINGEN PASSAR DIN MÅLGRUPP" title="Ange sammanhang" />
+            <MagicCard className="rounded-lg" gradientColor="#16161b" gradientFrom="#d84a31" gradientTo="#a43120" gradientOpacity={0.35}>
+              <div className="p-6">
+                <SegmentedField legend="Plattform" options={platformOptions} value={form.platform} onChange={platform => onForm({ ...form, platform })} />
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <label className="flex flex-col gap-2">
+                    <span className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">Innehållsnisch</span>
+                    <input required value={form.niche} onChange={event => onForm({ ...form, niche: event.target.value })} placeholder="Privatekonomi" className="h-12 rounded-lg border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50" />
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">Målgrupp</span>
+                    <input required value={form.audience} onChange={event => onForm({ ...form, audience: event.target.value })} placeholder="Nybörjarinvesterare" className="h-12 rounded-lg border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50" />
+                  </label>
+                </div>
+                <SegmentedField legend="Huvudmål" options={goalOptions} value={form.goal} onChange={goal => onForm({ ...form, goal })} labels={copy.goals} />
+              </div>
+            </MagicCard>
           </section>
 
           {error && <div role="alert" className="my-4 flex gap-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4"><strong className="shrink-0 font-mono text-[9px] text-destructive">KONTROLLERA UTKASTET</strong><span className="text-xs text-foreground">{error}</span></div>}
