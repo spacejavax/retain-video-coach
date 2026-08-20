@@ -18,7 +18,7 @@ import { MagicCard } from "../../components/ui/magic-card";
 import { NumberTicker } from "../../components/ui/number-ticker";
 import { Particles } from "../../components/ui/particles";
 import { ContainerTextFlip } from "../../components/ui/container-text-flip";
-import { ContainerScroll } from "../../components/ui/container-scroll-animation";
+import { CardBody, CardContainer, CardItem } from "../../components/ui/3d-card";
 import { AnalysisReport } from "./report";
 
 function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
@@ -172,7 +172,8 @@ function Brand({ onClick }: { onClick?: () => void }) {
 
 function SiteHeader({ demoMode, onHome, onDemo }: { demoMode: boolean; onHome: () => void; onDemo: () => void }) {
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur md:px-10">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/80 px-5 backdrop-blur-md md:px-10 relative">
+      <span className="header-glow" aria-hidden="true" />
       <Brand onClick={onHome} />
       <span className="hidden font-mono text-[10px] tracking-[.12em] text-muted-foreground sm:inline">{copy.brand.descriptor}</span>
       {demoMode ? (
@@ -343,45 +344,46 @@ function UseCases() {
 function ReportPreview({ onDemo }: { onDemo: () => void }) {
   const result = sampleAnalysis;
   return (
-    <section className="relative z-10 border-b border-border bg-background">
-      <ContainerScroll
-        titleComponent={
-          <div>
-            <p className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-[.14em] text-muted-foreground">
-              <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 12px var(--primary)" }} /> RAPPORTEN DU FÅR
-            </p>
-            <h2 className="display-text mt-6 text-4xl md:text-5xl">Ingen generisk feedback. <span className="text-muted-foreground">En redigerbar plan.</span></h2>
-          </div>
-        }
-      >
-        <div className="grid h-full grid-cols-1 overflow-hidden md:grid-cols-[220px_1fr]">
-          <div className="flex flex-col items-center justify-center gap-3 border-b border-border p-6 text-center md:border-b-0 md:border-r">
-            <div
-              className="relative grid h-28 w-28 place-items-center rounded-full md:h-32 md:w-32"
-              style={{ background: `conic-gradient(var(--primary) ${result.overallScore * 3.6}deg, var(--border) 0)` }}
-            >
-              <div className="absolute inset-2.5 rounded-full bg-background" />
-              <NumberTicker value={result.overallScore} className="z-10 font-mono text-3xl tabular-nums md:text-4xl" />
-              <span className="absolute bottom-7 z-10 font-mono text-[8px] text-muted-foreground md:bottom-8">/100</span>
-            </div>
-            <p className="font-mono text-[8px] tracking-[.08em] text-muted-foreground">RETENTIONSPOTENTIAL</p>
-            <b className="font-serif text-base italic text-primary md:text-lg">{copy.scoreLabels[result.scoreLabel]}</b>
-          </div>
-          <div className="flex flex-col overflow-y-auto p-5 md:p-8">
-            <p className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">REDAKTÖRENS BEDÖMNING</p>
-            <h3 className="display-text mt-2 text-xl md:text-3xl">{result.summary}</h3>
-            <div className="mt-4 space-y-2 border-t border-border pt-4">
-              {result.priorityActions.slice(0, 3).map((action, index) => (
-                <div key={action} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3">
-                  <span className="mt-0.5 shrink-0 font-mono text-[10px] text-primary">0{index + 1}</span>
-                  <p className="text-xs leading-relaxed md:text-sm">{action}</p>
+    <section className="relative z-10 border-b border-border bg-background py-20 md:py-28">
+      <div className="mx-auto max-w-6xl px-5 text-center">
+        <p className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-[.14em] text-muted-foreground">
+          <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 12px var(--primary)" }} /> RAPPORTEN DU FÅR
+        </p>
+        <h2 className="display-text mt-6 text-4xl md:text-5xl">Ingen generisk feedback. <span className="text-muted-foreground">En redigerbar plan.</span></h2>
+      </div>
+      <CardContainer containerClassName="py-12 md:py-16" className="w-full">
+        <CardBody className="h-auto w-[calc(100vw-2.5rem)] max-w-4xl">
+          <CardItem translateZ={40} className="w-full rounded-2xl border border-border bg-card shadow-2xl" style={{ boxShadow: "0 30px 60px -20px rgba(0,0,0,.35), 0 0 60px rgba(216,74,49,.12)" }}>
+            <div className="grid grid-cols-1 overflow-hidden rounded-2xl md:grid-cols-[220px_1fr]">
+              <div className="flex flex-col items-center justify-center gap-3 border-b border-border p-6 text-center md:border-b-0 md:border-r">
+                <div
+                  className="relative grid h-28 w-28 place-items-center rounded-full md:h-32 md:w-32"
+                  style={{ background: `conic-gradient(var(--primary) ${result.overallScore * 3.6}deg, var(--border) 0)` }}
+                >
+                  <div className="absolute inset-2.5 rounded-full bg-background" />
+                  <NumberTicker value={result.overallScore} className="z-10 font-mono text-3xl tabular-nums md:text-4xl" />
+                  <span className="absolute bottom-7 z-10 font-mono text-[8px] text-muted-foreground md:bottom-8">/100</span>
                 </div>
-              ))}
+                <p className="font-mono text-[8px] tracking-[.08em] text-muted-foreground">RETENTIONSPOTENTIAL</p>
+                <b className="font-serif text-base italic text-primary md:text-lg">{copy.scoreLabels[result.scoreLabel]}</b>
+              </div>
+              <div className="flex flex-col p-5 md:p-8">
+                <p className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">REDAKTÖRENS BEDÖMNING</p>
+                <h3 className="display-text mt-2 text-xl md:text-3xl">{result.summary}</h3>
+                <div className="mt-4 space-y-2 border-t border-border pt-4">
+                  {result.priorityActions.slice(0, 3).map((action, index) => (
+                    <div key={action} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3">
+                      <span className="mt-0.5 shrink-0 font-mono text-[10px] text-primary">0{index + 1}</span>
+                      <p className="text-xs leading-relaxed md:text-sm">{action}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </ContainerScroll>
-      <div className="mx-auto -mt-6 max-w-6xl px-5 pb-16 text-center md:-mt-16 md:pb-24">
+          </CardItem>
+        </CardBody>
+      </CardContainer>
+      <div className="mx-auto max-w-6xl px-5 text-center">
         <button className="border-0 border-b border-foreground bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-foreground" onClick={onDemo}>Se hela exempelrapporten ↗</button>
       </div>
     </section>
@@ -392,7 +394,8 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
   return (
     <div className="page-enter min-h-screen bg-background text-foreground">
       <div className="grain-overlay" aria-hidden="true" />
-      <header className="relative z-10 flex h-16 items-center justify-between border-b border-border px-5 md:px-10">
+      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/80 px-5 backdrop-blur-md md:px-10 relative">
+        <span className="header-glow" aria-hidden="true" />
         <Brand />
         <nav aria-label="Huvudnavigation" className="hidden items-center gap-7 md:flex">
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#product">Produkt</a>
@@ -402,7 +405,9 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
         </nav>
         <Button variant="default" size="sm" onClick={onStart}>Analysera video <ArrowRight /></Button>
       </header>
-      <main className="relative z-10 mx-auto grid max-w-6xl gap-14 px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24" id="product">
+      <main className="relative z-10 mx-auto grid max-w-6xl gap-14 overflow-hidden px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24" id="product">
+        <div className="grid-backdrop -z-10" aria-hidden="true" />
+        <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-primary/15 blur-[160px]" aria-hidden="true" />
         <div className="relative overflow-hidden">
           <Particles className="absolute -inset-x-10 -inset-y-16 -z-10" quantity={60} color="#d84a31" size={0.5} ease={70} />
           <Reveal>
