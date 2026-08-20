@@ -15,8 +15,13 @@ import { BorderBeam } from "../../components/ui/border-beam";
 import { Globe } from "../../components/ui/globe";
 import { Iphone } from "../../components/ui/iphone";
 import { MagicCard } from "../../components/ui/magic-card";
+import { Meteors } from "../../components/ui/meteors";
+import { MorphingText } from "../../components/ui/morphing-text";
 import { NumberTicker } from "../../components/ui/number-ticker";
 import { Particles } from "../../components/ui/particles";
+import RippleDistortion from "../../components/ui/ripple-distortion";
+import SpecularButton from "../../components/ui/specular-button";
+import { ScrollVelocityContainer, ScrollVelocityRow } from "../../components/ui/scroll-based-velocity";
 import { ContainerTextFlip } from "../../components/ui/container-text-flip";
 import { CardBody, CardContainer, CardItem } from "../../components/ui/3d-card";
 import { AnalysisReport } from "./report";
@@ -341,6 +346,45 @@ function UseCases() {
   );
 }
 
+const morphingOutcomes = ["fler visningar.", "längre visningstid.", "fler följare.", "fler konverteringar."];
+
+function OutcomesStrip() {
+  const reducedMotion = usePrefersReducedMotion();
+  return (
+    <section className="relative z-10 overflow-hidden border-b border-border bg-[#0a0a0b] py-16 md:py-20">
+      <div className="mx-auto max-w-4xl px-5 text-center">
+        <p className="font-mono text-[10px] tracking-[.14em] text-muted-foreground">RESULTATET ÄR</p>
+        <h2 className="mt-4 flex flex-wrap items-center justify-center gap-x-3 text-2xl sm:text-3xl md:text-5xl">
+          <span className="display-text text-foreground">Redigeringar som ger</span>
+          <MorphingText texts={morphingOutcomes} className="!h-10 !w-auto !max-w-none flex-1 basis-full !text-2xl !font-serif !font-medium !text-primary sm:!h-12 sm:!text-3xl md:!h-16 md:basis-auto md:!text-5xl lg:!text-5xl" />
+        </h2>
+      </div>
+      {reducedMotion ? (
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-5 font-mono text-xs tracking-[.1em] text-muted-foreground/70">
+          {["HOOK", "TEMPO", "TYDLIGHET", "AVSLUT", "RETENTION", "TIDSSTÄMPLAR"].map(word => <span key={word}>{word}</span>)}
+        </div>
+      ) : (
+        <ScrollVelocityContainer className="mt-10">
+          <ScrollVelocityRow baseVelocity={3} direction={1} className="py-2 font-mono text-sm tracking-[.14em] text-muted-foreground/60 md:text-base">
+            {["HOOK", "TEMPO", "TYDLIGHET", "AVSLUT", "RETENTION", "TIDSSTÄMPLAR"].map(word => (
+              <span key={word} className="mx-6 flex items-center gap-6">
+                {word} <i className="inline-block h-1 w-1 rounded-full bg-primary/60" />
+              </span>
+            ))}
+          </ScrollVelocityRow>
+          <ScrollVelocityRow baseVelocity={3} direction={-1} className="py-2 font-mono text-sm tracking-[.14em] text-muted-foreground/40 md:text-base">
+            {["TIKTOK", "REELS", "SHORTS", "HOOK-GRANSKNING", "FÖRE / EFTER", "NISCHANPASSAT"].map(word => (
+              <span key={word} className="mx-6 flex items-center gap-6">
+                {word} <i className="inline-block h-1 w-1 rounded-full bg-primary/40" />
+              </span>
+            ))}
+          </ScrollVelocityRow>
+        </ScrollVelocityContainer>
+      )}
+    </section>
+  );
+}
+
 function ReportPreview({ onDemo }: { onDemo: () => void }) {
   const result = sampleAnalysis;
   return (
@@ -403,7 +447,22 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#workflow">Så funkar det</a>
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#use-cases">Användningsområden</a>
         </nav>
-        <Button variant="default" size="sm" onClick={onStart}>Analysera video <ArrowRight /></Button>
+        <SpecularButton
+          size="sm"
+          radius={999}
+          tint="#d84a31"
+          tintOpacity={0.92}
+          baseColor="#a43120"
+          lineColor="#ffcbb3"
+          textColor="#fbf3ee"
+          intensity={1.3}
+          shineSize={14}
+          shineFade={45}
+          proximity={220}
+          onClick={onStart}
+        >
+          Analysera video <ArrowRight className="size-4" />
+        </SpecularButton>
       </header>
       <main className="relative z-10 mx-auto grid max-w-6xl gap-14 overflow-hidden px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24" id="product">
         <div className="grid-backdrop -z-10" aria-hidden="true" />
@@ -435,7 +494,22 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           </Reveal>
           <Reveal delay={0.24}>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button variant="default" size="lg" className="h-12 px-6" onClick={onStart}>Analysera din video <ArrowRight /></Button>
+              <SpecularButton
+                size="lg"
+                radius={999}
+                tint="#d84a31"
+                tintOpacity={0.92}
+                baseColor="#a43120"
+                lineColor="#ffcbb3"
+                textColor="#fbf3ee"
+                intensity={1.3}
+                shineSize={14}
+                shineFade={45}
+                proximity={280}
+                onClick={onStart}
+              >
+                Analysera din video <ArrowRight className="size-4" />
+              </SpecularButton>
               <Button variant="outline" size="lg" className="h-12 px-6" onClick={onDemo}>Visa exempelrapport</Button>
             </div>
           </Reveal>
@@ -497,8 +571,26 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
         </div>
       </section>
       <UseCases />
+      <OutcomesStrip />
       <section className="relative z-10 overflow-hidden">
-        <Particles className="absolute inset-0 -z-10" quantity={40} color="#d84a31" size={0.4} ease={70} />
+        <RippleDistortion
+          className="absolute inset-0 -z-10"
+          src="/ripple-bg.svg"
+          brushSize={180}
+          strength={0.16}
+          swirl={1.4}
+          rings={3}
+          spread={4}
+          fade={2.4}
+          tint="#d84a31"
+          tintAmount={0.18}
+          highlightColor="#ffb199"
+          glint={0.4}
+          grayscale={false}
+          quality="medium"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0b]" />
+        {!usePrefersReducedMotion() && <Meteors number={18} />}
         <div className="mx-auto max-w-2xl px-5 py-24 text-center md:py-32">
           <Reveal>
             <h2 className="display-text text-4xl md:text-5xl">Sluta gissa vad som tappar tittarna.</h2>
@@ -508,7 +600,22 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           </Reveal>
           <Reveal delay={0.16}>
             <div className="mt-9 flex justify-center">
-              <Button variant="default" size="lg" className="h-12 px-6" onClick={onStart}>Analysera din video <ArrowRight /></Button>
+              <SpecularButton
+                size="lg"
+                radius={999}
+                tint="#d84a31"
+                tintOpacity={0.92}
+                baseColor="#a43120"
+                lineColor="#ffcbb3"
+                textColor="#fbf3ee"
+                intensity={1.3}
+                shineSize={14}
+                shineFade={45}
+                proximity={280}
+                onClick={onStart}
+              >
+                Analysera din video <ArrowRight className="size-4" />
+              </SpecularButton>
             </div>
           </Reveal>
         </div>
@@ -632,7 +739,24 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
 
           <div className="flex flex-col items-start gap-4 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
             <span className="max-w-xs text-[10px] text-muted-foreground">AI-feedback är vägledning. Resultatet varierar med innehåll och målgrupp.</span>
-            <Button type="submit" variant="default" size="lg" className="h-12 w-full px-6 sm:w-auto" disabled={demoMode}>Analysera video <ArrowRight /></Button>
+            <SpecularButton
+              type="submit"
+              size="lg"
+              radius={999}
+              tint="#d84a31"
+              tintOpacity={0.92}
+              baseColor="#a43120"
+              lineColor="#ffcbb3"
+              textColor="#fbf3ee"
+              intensity={1.3}
+              shineSize={14}
+              shineFade={45}
+              proximity={280}
+              disabled={demoMode}
+              className="w-full sm:w-auto"
+            >
+              Analysera video <ArrowRight className="size-4" />
+            </SpecularButton>
           </div>
         </form>
       </main>
