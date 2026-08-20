@@ -15,11 +15,11 @@ import { BorderBeam } from "../../components/ui/border-beam";
 import { Globe } from "../../components/ui/globe";
 import { Iphone } from "../../components/ui/iphone";
 import { MagicCard } from "../../components/ui/magic-card";
-import { Meteors } from "../../components/ui/meteors";
 import { MorphingText } from "../../components/ui/morphing-text";
 import { NumberTicker } from "../../components/ui/number-ticker";
 import { Particles } from "../../components/ui/particles";
-import RippleDistortion from "../../components/ui/ripple-distortion";
+import ElectricBorder from "../../components/ui/electric-border";
+import RippleHeadline from "../../components/ui/ripple-headline";
 import SpecularButton from "../../components/ui/specular-button";
 import { ScrollVelocityContainer, ScrollVelocityRow } from "../../components/ui/scroll-based-velocity";
 import { ContainerTextFlip } from "../../components/ui/container-text-flip";
@@ -216,6 +216,7 @@ function DemoConsole() {
   }, [playing]);
 
   return (
+    <ElectricBorder color="#d84a31" speed={0.5} chaos={0.05} borderRadius={8} className="block">
     <div ref={consoleRef} aria-label="Exempel på pågående Retain-analys" className="relative overflow-hidden rounded-lg border border-border bg-card shadow-2xl shadow-black/40">
       <Beam />
       <div className="flex h-10 items-center justify-between border-b border-border px-4 font-mono text-[9px] tracking-[.08em] text-muted-foreground">
@@ -280,6 +281,7 @@ function DemoConsole() {
         </div>
       </div>
     </div>
+    </ElectricBorder>
   );
 }
 
@@ -573,9 +575,10 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
       <UseCases />
       <OutcomesStrip />
       <section className="relative z-10 overflow-hidden">
-        <RippleDistortion
+        <RippleHeadline
           className="absolute inset-0 -z-10"
-          src="/ripple-bg.svg"
+          text="Sluta gissa vad som tappar tittarna."
+          backgroundSrc="/ripple-bg.svg"
           brushSize={180}
           strength={0.16}
           swirl={1.4}
@@ -590,11 +593,9 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           quality="medium"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0b]" />
-        {!usePrefersReducedMotion() && <Meteors number={18} />}
         <div className="mx-auto max-w-2xl px-5 py-24 text-center md:py-32">
-          <Reveal>
-            <h2 className="display-text text-4xl md:text-5xl">Sluta gissa vad som tappar tittarna.</h2>
-          </Reveal>
+          <h2 className="sr-only">Sluta gissa vad som tappar tittarna.</h2>
+          <div className="h-[clamp(260px,34vw,400px)]" aria-hidden="true" />
           <Reveal delay={0.08}>
             <p className="body-text mx-auto mt-5">Ladda upp ett utkast och få en tidsstämplad redigering på under en minut.</p>
           </Reveal>
@@ -686,9 +687,9 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
         <form onSubmit={event => { event.preventDefault(); onAnalyse(); }}>
           <section className="border-t border-border py-10">
             <IntakeSectionHeading index="01" eyebrow="EN VERTIKAL VIDEO" title="Lägg till ditt utkast" />
-            <MagicCard className="rounded-lg" gradientColor="#16161b" gradientFrom="#d84a31" gradientTo="#a43120" gradientOpacity={0.5}>
+            <ElectricBorder color="#d84a31" speed={file ? 0.4 : 1} chaos={file ? 0.05 : 0.12} borderRadius={8} className="block">
               <label
-                className={`relative flex cursor-pointer flex-col items-center justify-center gap-1.5 border border-dashed border-transparent bg-card transition-colors hover:border-primary/60 ${file ? "h-28 flex-row justify-start gap-4 px-5" : "h-52 text-center"}`}
+                className={`relative flex cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-dashed border-transparent bg-card transition-colors hover:border-primary/60 ${file ? "h-28 flex-row justify-start gap-4 px-5" : "h-52 text-center"}`}
                 onDragOver={event => event.preventDefault()}
                 onDrop={event => { event.preventDefault(); const next = event.dataTransfer.files[0]; if (next) onFile(next); }}
               >
@@ -711,7 +712,7 @@ function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onF
                   </>
                 )}
               </label>
-            </MagicCard>
+            </ElectricBorder>
             <p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0" />Din video bearbetas för den här redigeringen och raderas sedan. Den läggs aldrig i ett offentligt bibliotek.</p>
           </section>
 
