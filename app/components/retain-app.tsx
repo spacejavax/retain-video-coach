@@ -621,6 +621,12 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           </Reveal>
         </div>
       </section>
+      <footer className="relative z-10 border-t border-border bg-[#0a0a0b] py-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 font-mono text-[10px] tracking-[.08em] text-muted-foreground sm:flex-row">
+          <span>© {new Date().getFullYear()} Retain</span>
+          <a href="/privacy" className="hover:text-foreground">Integritetspolicy</a>
+        </div>
+      </footer>
     </div>
   );
 }
