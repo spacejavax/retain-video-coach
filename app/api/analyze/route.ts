@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
-import { GeminiProvider } from "../../../lib/ai-provider";
+import { GeminiProvider, HackClubProvider } from "../../../lib/ai-provider";
 import { mapError, AppError } from "../../../lib/errors";
-import { IS_DEMO_MODE } from "../../../lib/config";
+import { AI_PROVIDER, IS_DEMO_MODE } from "../../../lib/config";
 import { checkRateLimit } from "../../../lib/rate-limit";
 import { formSchema } from "../../../lib/schema";
 import { track } from "../../../lib/analytics";
+import { consumeSessionToken } from "../../../lib/session-tokens";
+import { getRequestIp } from "../../../lib/request-ip";
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   if (IS_DEMO_MODE) { track("demo_mode_blocked", { route: "analyze" }); return NextResponse.json({ error: { code: "DEMO_MODE", message: "Load the sample report, or add GEMINI_API_KEY for real analysis." } }, { status: 503 }); }
-  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0] || "local";
+  const ip = getRequestIp(request);
   if (!checkRateLimit(ip)) { track("rate_limited", { route: "analyze" }); return NextResponse.json({ error: { code: "RATE_LIMITED", message: "You've reached five analyses this hour. Try again a little later." } }, { status: 429 }); }
   track("analyze_requested");
   let fileName = "";
-  const provider = new GeminiProvider(process.env.GEMINI_API_KEY!);
+  const provider = AI_PROVIDER === "hackclub" ? new HackClubProvider(process.env.HACKCLUB_API_KEY!) : new GeminiProvider(process.env.GEMINI_API_KEY!);
   try {
-    const input = formSchema.parse(await request.json()); fileName = input.fileName;
+    const input = formSchema.parse(await request.json());
+    if (!consumeSessionToken(input.sessionToken, ip)) { track("analyze_failed", { code: "INVALID_SESSION", status: 401 }); return NextResponse.json({ error: { code: "INVALID_SESSION", message: "Your upload session expired. Choose the video again and retry." } }, { status: 401 }); }
+    fileName = input.fileName;
     const result = await provider.analyse(input);
     track("analyze_succeeded", { score: result.overallScore });
     return NextResponse.json({ result });

@@ -93,7 +93,7 @@ export function Globe({
       },
     })
 
-    setTimeout(() => (canvasRef.current!.style.opacity = "1"), 0)
+    setTimeout(() => { if (canvasRef.current) canvasRef.current.style.opacity = "1" }, 0)
     return () => {
       globe.destroy()
       window.removeEventListener("resize", onResize)

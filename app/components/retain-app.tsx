@@ -835,7 +835,7 @@ export function RetainApp({ demoMode }: { demoMode: boolean }) {
     setError(""); setView("loading"); setStage(0);
     try {
       const session = await fetch("/api/upload-session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: file.name, type: file.type, size: file.size }) });
-      const sessionData = await session.json() as { uploadUrl: string; error?: { message: string } };
+      const sessionData = await session.json() as { uploadUrl: string; sessionToken: string; error?: { message: string } };
       if (!session.ok) throw new Error(sessionData.error?.message);
       setStage(1);
       const upload = await fetch(sessionData.uploadUrl, { method: "POST", headers: { "Content-Length": String(file.size), "X-Goog-Upload-Offset": "0", "X-Goog-Upload-Command": "upload, finalize" }, body: file });
@@ -843,7 +843,7 @@ export function RetainApp({ demoMode }: { demoMode: boolean }) {
       const uploaded = await upload.json() as { file: { uri: string; name: string } };
       setStage(2);
       tickerRef.current = window.setInterval(() => setStage(current => Math.min(4, current + 1)), 3500);
-      const response = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, fileUri: uploaded.file.uri, fileName: uploaded.file.name, mimeType: file.type }) });
+      const response = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, sessionToken: sessionData.sessionToken, fileUri: uploaded.file.uri, fileName: uploaded.file.name, mimeType: file.type }) });
       const data = await response.json() as { result: Analysis; error?: { message: string } };
       if (!response.ok) throw new Error(data.error?.message);
       setResult(data.result); setView("report"); goTop();
