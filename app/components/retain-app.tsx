@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
-import { Activity, ArrowRight, Check, Clock, FileVideo, Pause, Play, Scissors, ShieldCheck, Sparkles, TrendingUp, Upload, Users, X } from "lucide-react";
+import { Activity, ArrowRight, Check, Clock, FileVideo, Pause, Play, Scissors, ShieldCheck, Sparkles, Trash2, TrendingUp, Upload, Users, X } from "lucide-react";
 import { copy } from "../../lib/copy";
 import { sampleAnalysis } from "../../lib/mock-analysis";
 import type { Analysis } from "../../lib/schema";
@@ -25,6 +25,10 @@ import { ScrollVelocityContainer, ScrollVelocityRow } from "../../components/ui/
 import { ContainerTextFlip } from "../../components/ui/container-text-flip";
 import { CardBody, CardContainer, CardItem } from "../../components/ui/3d-card";
 import { AnalysisReport } from "./report";
+import { AuthWidget } from "./auth-widget";
+import { useAuth } from "../../lib/auth-context";
+import { SHOW_ACCOUNTS } from "../../lib/config";
+import { SocialProof } from "./social-proof";
 
 function Reveal({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
   const reducedMotion = usePrefersReducedMotion();
@@ -68,8 +72,9 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
   );
 }
 
-type View = "landing" | "form" | "loading" | "report";
-type FormState = {
+type View = "landing" | "form" | "loading" | "report" | "saved";
+export type SavedAnalysis = { id: string; created_at: string; platform: string; niche: string; audience: string; goal: string; video_filename: string | null; overall_score: number; score_label: Analysis["scoreLabel"]; result: Analysis };
+export type FormState = {
   platform: "TikTok" | "Instagram Reels" | "YouTube Shorts";
   niche: string;
   audience: string;
@@ -175,21 +180,34 @@ function Brand({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function SiteHeader({ demoMode, onHome, onDemo }: { demoMode: boolean; onHome: () => void; onDemo: () => void }) {
+function SiteHeader({ demoMode, onHome, onDemo, onSaved }: { demoMode: boolean; onHome: () => void; onDemo: () => void; onSaved: () => void }) {
+  const { user } = useAuth();
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/80 px-5 backdrop-blur-md md:px-10 relative">
       <span className="header-glow" aria-hidden="true" />
       <Brand onClick={onHome} />
       <span className="hidden font-mono text-[10px] tracking-[.12em] text-muted-foreground sm:inline">{copy.brand.descriptor}</span>
-      {demoMode ? (
-        <button className="border-0 border-b border-primary bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-primary" onClick={onDemo}>
-          ÖPPNA EXEMPEL ↗
-        </button>
-      ) : (
-        <span className="flex items-center gap-2 font-mono text-[9px] tracking-[.08em] text-muted-foreground">
-          <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" /> GEMINI REDO
-        </span>
-      )}
+      <div className="flex items-center gap-4">
+        {demoMode ? (
+          <button className="border-0 border-b border-primary bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-primary" onClick={onDemo}>
+            ÖPPNA EXEMPEL ↗
+          </button>
+        ) : (
+          <span className="hidden items-center gap-2 font-mono text-[9px] tracking-[.08em] text-muted-foreground sm:flex">
+            <i className="inline-block h-1.5 w-1.5 rounded-full bg-primary" /> GEMINI REDO
+          </span>
+        )}
+        {SHOW_ACCOUNTS && user && (
+          <button className="border-0 border-b border-foreground bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-foreground" onClick={onSaved}>
+            SPARADE RAPPORTER
+          </button>
+        )}
+        {SHOW_ACCOUNTS ? (
+          <AuthWidget />
+        ) : (
+          <a href="/waitlist" className="rounded-full border border-primary/50 bg-primary/10 px-3.5 py-1.5 font-mono text-[10px] tracking-[.08em] text-primary transition-colors hover:bg-primary/20">GÅ MED I KÖN</a>
+        )}
+      </div>
     </header>
   );
 }
@@ -436,7 +454,8 @@ function ReportPreview({ onDemo }: { onDemo: () => void }) {
   );
 }
 
-function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void }) {
+function Landing({ onStart, onDemo, onSaved }: { onStart: () => void; onDemo: () => void; onSaved: () => void }) {
+  const { user } = useAuth();
   return (
     <div className="page-enter min-h-screen bg-background text-foreground">
       <div className="grain-overlay" aria-hidden="true" />
@@ -448,8 +467,16 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           <button className="text-xs text-muted-foreground hover:text-foreground" onClick={onDemo}>Exempelrapport</button>
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#workflow">Så funkar det</a>
           <a className="text-xs text-muted-foreground hover:text-foreground" href="#use-cases">Användningsområden</a>
+          {SHOW_ACCOUNTS && user && <button className="text-xs text-muted-foreground hover:text-foreground" onClick={onSaved}>Sparade rapporter</button>}
         </nav>
-        <SpecularButton
+        <div className="flex items-center gap-4">
+          {SHOW_ACCOUNTS ? <AuthWidget /> : (
+            <a href="/waitlist" className="rounded-full border border-primary/50 bg-primary/10 px-2.5 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20 sm:px-3.5 sm:text-xs">
+              <span className="sm:hidden">Väntelista</span>
+              <span className="hidden sm:inline">Gå med i väntelistan</span>
+            </a>
+          )}
+          <SpecularButton
           size="sm"
           radius={999}
           tint="#d84a31"
@@ -462,9 +489,10 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
           shineFade={45}
           proximity={220}
           onClick={onStart}
-        >
-          Analysera video <ArrowRight className="size-4" />
-        </SpecularButton>
+          >
+            Analysera video <ArrowRight className="size-4" />
+          </SpecularButton>
+        </div>
       </header>
       <main className="relative z-10 mx-auto grid max-w-6xl gap-14 overflow-hidden px-5 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-24" id="product">
         <div className="grid-backdrop -z-10" aria-hidden="true" />
@@ -574,6 +602,7 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
       </section>
       <UseCases />
       <OutcomesStrip />
+      <SocialProof />
       <section className="relative z-10 overflow-hidden">
         <RippleHeadline
           className="absolute inset-0 -z-10"
@@ -600,7 +629,7 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
             <p className="body-text mx-auto mt-5">Ladda upp ett utkast och få en tidsstämplad redigering på under en minut.</p>
           </Reveal>
           <Reveal delay={0.16}>
-            <div className="mt-9 flex justify-center">
+            <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <SpecularButton
                 size="lg"
                 radius={999}
@@ -617,6 +646,11 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
               >
                 Analysera din video <ArrowRight className="size-4" />
               </SpecularButton>
+              {!SHOW_ACCOUNTS && (
+                <a href="/waitlist" className="flex h-12 items-center justify-center rounded-full border border-primary/50 bg-primary/10 px-6 text-sm font-medium text-primary transition-colors hover:bg-primary/20">
+                  Gå med i väntelistan
+                </a>
+              )}
             </div>
           </Reveal>
         </div>
@@ -624,7 +658,10 @@ function Landing({ onStart, onDemo }: { onStart: () => void; onDemo: () => void 
       <footer className="relative z-10 border-t border-border bg-[#0a0a0b] py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 font-mono text-[10px] tracking-[.08em] text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} Retain</span>
-          <a href="/privacy" className="hover:text-foreground">Integritetspolicy</a>
+          <div className="flex items-center gap-5">
+            {!SHOW_ACCOUNTS && <a href="/waitlist" className="text-primary hover:text-primary/80">Gå med i väntelistan</a>}
+            <a href="/privacy" className="hover:text-foreground">Integritetspolicy</a>
+          </div>
         </div>
       </footer>
     </div>
@@ -664,13 +701,13 @@ function SegmentedField<T extends string>({ legend, options, value, onChange, la
   );
 }
 
-function UploadForm({ demoMode, onHome, onDemo, file, duration, form, error, onFile, onRemove, onForm, onAnalyse }: {
-  demoMode: boolean; onHome: () => void; onDemo: () => void; file: File | null; duration: number; form: FormState; error: string;
+function UploadForm({ demoMode, onHome, onDemo, onSaved, file, duration, form, error, onFile, onRemove, onForm, onAnalyse }: {
+  demoMode: boolean; onHome: () => void; onDemo: () => void; onSaved: () => void; file: File | null; duration: number; form: FormState; error: string;
   onFile: (file: File) => void; onRemove: () => void; onForm: (form: FormState) => void; onAnalyse: () => void;
 }) {
   return (
     <div className="page-enter min-h-screen bg-background text-foreground">
-      <SiteHeader demoMode={demoMode} onHome={onHome} onDemo={onDemo} />
+      <SiteHeader demoMode={demoMode} onHome={onHome} onDemo={onDemo} onSaved={onSaved} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8 md:px-10">
         <button className="border-0 bg-transparent p-0 font-mono text-[9px] tracking-[.08em] text-muted-foreground hover:text-foreground" onClick={onHome}>← TILLBAKA</button>
         <div className="relative overflow-hidden border-b border-border py-10">
@@ -803,6 +840,69 @@ function LoadingView({ stage }: { stage: number }) {
   );
 }
 
+function SavedReports({ onHome, onOpen }: { onHome: () => void; onOpen: (analysis: SavedAnalysis) => void }) {
+  const { session } = useAuth();
+  const [items, setItems] = useState<SavedAnalysis[] | null>(null);
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    fetch("/api/analyses", { headers: { Authorization: `Bearer ${session.access_token}` } })
+      .then(async response => {
+        const data = await response.json() as { analyses?: SavedAnalysis[]; error?: { message: string } };
+        if (cancelled) return;
+        if (!response.ok) { setError(data.error?.message ?? "Kunde inte hämta sparade rapporter."); return; }
+        setItems(data.analyses ?? []);
+      })
+      .catch(() => { if (!cancelled) setError("Kunde inte hämta sparade rapporter."); });
+    return () => { cancelled = true; };
+  }, [session]);
+
+  async function deleteReport(event: React.MouseEvent, id: string) {
+    event.stopPropagation();
+    if (!session || deletingId) return;
+    setDeletingId(id);
+    const response = await fetch(`/api/analyses?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${session.access_token}` } });
+    if (response.ok) setItems(current => current?.filter(item => item.id !== id) ?? current);
+    setDeletingId(null);
+  }
+
+  return (
+    <div className="page-enter min-h-screen bg-background text-foreground">
+      <header className="flex h-16 items-center justify-between border-b border-border px-5 md:px-10">
+        <Brand onClick={onHome} />
+        <span className="hidden font-mono text-[10px] tracking-[.12em] text-muted-foreground sm:inline">SPARADE RAPPORTER</span>
+        <button className="border-0 border-b border-foreground bg-transparent pb-0.5 font-mono text-[10px] tracking-[.08em] text-foreground" onClick={onHome}>← TILLBAKA</button>
+      </header>
+      <main className="mx-auto max-w-3xl px-5 pb-24 pt-10 md:px-10">
+        <h1 className="display-text text-3xl md:text-5xl">Dina rapporter</h1>
+        {error && <p className="mt-6 text-sm text-destructive">{error}</p>}
+        {!error && items === null && <p className="mt-6 text-sm text-muted-foreground">Laddar...</p>}
+        {items && items.length === 0 && <p className="mt-6 text-sm text-muted-foreground">Du har inga sparade rapporter än.</p>}
+        {items && items.length > 0 && (
+          <div className="mt-8 overflow-hidden rounded-lg border border-border">
+            {items.map(item => (
+              <div key={item.id} role="button" tabIndex={0} onClick={() => onOpen(item)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen(item); } }} className="grid w-full cursor-pointer grid-cols-[70px_1fr_auto_auto] items-center gap-4 border-b border-border bg-card p-5 text-left last:border-b-0 hover:bg-secondary">
+                <strong className="font-mono text-2xl tabular-nums text-primary">{item.overall_score}</strong>
+                <div>
+                  <p className="text-sm font-semibold">{item.niche || "Namnlös video"}</p>
+                  <p className="mt-1 font-mono text-[9px] tracking-[.08em] text-muted-foreground">{item.platform} · {new Date(item.created_at).toLocaleDateString("sv-SE")}</p>
+                </div>
+                <button onClick={event => deleteReport(event, item.id)} disabled={deletingId === item.id} aria-label="Radera rapport" className="border-0 bg-transparent p-2 text-muted-foreground hover:text-destructive disabled:opacity-50">
+                  <Trash2 className="size-4" />
+                </button>
+                <ArrowRight className="size-4 text-muted-foreground" />
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
 export function RetainApp({ demoMode }: { demoMode: boolean }) {
   const [view, setView] = useState<View>("landing");
   const [file, setFile] = useState<File | null>(null);
@@ -854,8 +954,9 @@ export function RetainApp({ demoMode }: { demoMode: boolean }) {
     }
   }
 
-  if (view === "report" && result) return <AnalysisReport result={result} onReset={reset} demo={result === sampleAnalysis} />;
+  if (view === "report" && result) return <AnalysisReport result={result} onReset={reset} demo={result === sampleAnalysis} form={form} fileName={file?.name} />;
+  if (view === "saved") return <SavedReports onHome={() => setView("landing")} onOpen={item => { setResult(item.result); setView("report"); goTop(); }} />;
   if (view === "loading") return <LoadingView stage={stage} />;
-  if (view === "form") return <UploadForm demoMode={demoMode} onHome={() => setView("landing")} onDemo={loadDemo} file={file} duration={duration} form={form} error={error} onFile={chooseFile} onRemove={() => setFile(null)} onForm={setForm} onAnalyse={analyse} />;
-  return <Landing onStart={() => setView("form")} onDemo={loadDemo} />;
+  if (view === "form") return <UploadForm demoMode={demoMode} onHome={() => setView("landing")} onDemo={loadDemo} onSaved={() => setView("saved")} file={file} duration={duration} form={form} error={error} onFile={chooseFile} onRemove={() => setFile(null)} onForm={setForm} onAnalyse={analyse} />;
+  return <Landing onStart={() => setView("form")} onDemo={loadDemo} onSaved={() => setView("saved")} />;
 }

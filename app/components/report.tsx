@@ -2,10 +2,13 @@
 /* eslint-disable react/no-unescaped-entities -- editorial labels intentionally use apostrophes */
 
 import { useState } from "react";
-import { ArrowRight, Check, Copy, RotateCcw } from "lucide-react";
+import { ArrowRight, Check, Copy, RotateCcw, Save } from "lucide-react";
 import { copy } from "../../lib/copy";
 import type { Analysis } from "../../lib/schema";
+import type { FormState } from "./retain-app";
 import { usePrefersReducedMotion } from "../../lib/use-prefers-reduced-motion";
+import { useAuth } from "../../lib/auth-context";
+import { SHOW_ACCOUNTS } from "../../lib/config";
 import { Button } from "../../components/ui/button";
 import { BorderBeam } from "../../components/ui/border-beam";
 import { MagicCard } from "../../components/ui/magic-card";
@@ -19,11 +22,11 @@ function Beam() {
 
 function ReportTitle({ index, eyebrow, title }: { index: string; eyebrow: string; title: string }) {
   return (
-    <header className="mb-8 grid grid-cols-[60px_1fr] border-t border-border pt-6">
+    <header className="mb-6 grid grid-cols-[60px_1fr] border-t border-border pt-6">
       <span className="font-mono text-[10px] text-primary">{index}</span>
       <div>
         <p className="font-mono text-[8px] tracking-[.1em] text-muted-foreground">{eyebrow}</p>
-        <h2 className="display-text mt-1.5 text-3xl md:text-5xl">{title}</h2>
+        <h2 className="display-text mt-1.5 text-2xl md:text-3xl">{title}</h2>
       </div>
     </header>
   );
@@ -41,7 +44,31 @@ function ReportHeader({ onReset }: { onReset: () => void }) {
   );
 }
 
-export function AnalysisReport({ result, onReset, demo }: { result: Analysis; onReset: () => void; demo: boolean }) {
+function SaveButton({ result, form, fileName }: { result: Analysis; form?: FormState; fileName?: string }) {
+  const { user, session } = useAuth();
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  if (!user) return <p className="font-mono text-[9px] tracking-[.08em] text-muted-foreground">LOGGA IN FÖR ATT SPARA DENNA RAPPORT</p>;
+
+  async function save() {
+    if (!session) return;
+    setStatus("saving");
+    const response = await fetch("/api/analyses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ platform: form?.platform ?? "TikTok", niche: form?.niche ?? "", audience: form?.audience ?? "", goal: form?.goal ?? "views", videoFilename: fileName, result }),
+    });
+    setStatus(response.ok ? "saved" : "error");
+  }
+
+  return (
+    <Button variant="outline" size="lg" className="h-12 w-full px-6 sm:w-auto" onClick={save} disabled={status === "saving" || status === "saved"}>
+      {status === "saved" ? "Sparad" : status === "saving" ? "Sparar..." : "Spara rapport"} <Save />
+    </Button>
+  );
+}
+
+export function AnalysisReport({ result, onReset, demo, form, fileName }: { result: Analysis; onReset: () => void; demo: boolean; form?: FormState; fileName?: string }) {
   const [copied, setCopied] = useState(false);
   async function copyScript() { await navigator.clipboard.writeText(result.revisedScript); setCopied(true); window.setTimeout(() => setCopied(false), 1600); }
 
@@ -56,23 +83,25 @@ export function AnalysisReport({ result, onReset, demo }: { result: Analysis; on
           </div>
         )}
 
-        <section className="relative grid overflow-hidden rounded-lg border border-border bg-card md:grid-cols-[300px_1fr]">
+        <section className="relative grid overflow-hidden rounded-lg border border-border bg-card md:grid-cols-[260px_1fr]">
           <Beam />
-          <div className="flex flex-col items-center gap-4 border-b border-border p-8 text-center md:border-b-0 md:border-r">
+          <div className="flex flex-col items-center justify-center gap-4 border-b border-border p-8 text-center md:border-b-0 md:border-r">
             <div
-              className="relative grid h-44 w-44 place-items-center rounded-full"
+              className="relative grid h-36 w-36 place-items-center rounded-full"
               style={{ background: `conic-gradient(var(--primary) ${result.overallScore * 3.6}deg, var(--border) 0)` }}
             >
               <div className="absolute inset-3 rounded-full bg-card" />
-              <NumberTicker value={result.overallScore} className="z-10 font-mono text-6xl tabular-nums" />
-              <span className="absolute bottom-11 z-10 font-mono text-[9px] text-muted-foreground">/100</span>
+              <NumberTicker value={result.overallScore} className="z-10 font-mono text-5xl tabular-nums" />
+              <span className="absolute bottom-9 z-10 font-mono text-[9px] text-muted-foreground">/100</span>
             </div>
             <p className="font-mono text-[8px] tracking-[.08em] text-muted-foreground">RETENTIONSPOTENTIAL</p>
-            <b className="font-serif text-xl italic text-primary">{copy.scoreLabels[result.scoreLabel]}</b>
+            <b className="font-serif text-lg italic text-primary">{copy.scoreLabels[result.scoreLabel]}</b>
           </div>
-          <div className="p-8 md:p-11">
-            <p className="font-mono text-[10px] tracking-[.08em] text-muted-foreground">REDAKTÖRENS BEDÖMNING</p>
-            <h1 className="display-text mt-5 text-3xl md:text-5xl">{result.summary}</h1>
+          <div className="flex flex-col justify-center gap-5 p-8 md:p-10">
+            <div>
+              <p className="font-mono text-[10px] tracking-[.08em] text-muted-foreground">REDAKTÖRENS BEDÖMNING</p>
+              <h1 className="display-text mt-3 max-w-2xl text-2xl leading-snug md:text-3xl">{result.summary}</h1>
+            </div>
             <div className="grid grid-cols-[110px_1fr] gap-2 border-t border-border pt-4">
               <span className="font-mono text-[8px] text-primary">FÖRSTA ÅTGÄRDEN</span>
               <p className="text-sm">{result.biggestProblem}</p>
@@ -201,7 +230,10 @@ export function AnalysisReport({ result, onReset, demo }: { result: Analysis; on
 
         <section className="flex flex-col items-start gap-6 border-t border-border pt-7 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-xl text-[10px] text-muted-foreground">{result.disclaimer}</p>
-          <Button variant="default" size="lg" className="h-12 w-full px-6 sm:w-auto" onClick={onReset}>Analysera en ny video <RotateCcw /></Button>
+          <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:flex-row sm:items-center">
+            {SHOW_ACCOUNTS && !demo && <SaveButton result={result} form={form} fileName={fileName} />}
+            <Button variant="default" size="lg" className="h-12 w-full px-6 sm:w-auto" onClick={onReset}>Analysera en ny video <RotateCcw /></Button>
+          </div>
         </section>
       </main>
       <footer className="mx-auto flex max-w-5xl flex-col gap-2 border-t border-border px-5 py-6 font-mono text-[8px] text-muted-foreground sm:flex-row sm:justify-between md:px-10">

@@ -11,3 +11,4 @@ export const AI_PROVIDER: "gemini" | "hackclub" | "demo" = process.env.HACKCLUB_
   ? "gemini"
   : "demo";
 export const IS_DEMO_MODE = AI_PROVIDER === "demo";
+export const SHOW_ACCOUNTS = false;

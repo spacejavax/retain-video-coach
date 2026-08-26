@@ -6,7 +6,9 @@ export type AnalyticsEvent =
   | "analyze_succeeded"
   | "analyze_failed"
   | "rate_limited"
-  | "demo_mode_blocked";
+  | "demo_mode_blocked"
+  | "waitlist_joined"
+  | "waitlist_duplicate";
 
 /**
  * Server-side, aggregate-only funnel logging. No cookies, no client script,

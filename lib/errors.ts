@@ -1,4 +1,4 @@
-export type ErrorCode = "UNSUPPORTED_FORMAT" | "FILE_TOO_LARGE" | "VIDEO_TOO_LONG" | "INVALID_INPUT" | "UPLOAD_FAILED" | "AI_FAILED" | "AI_TIMEOUT" | "INVALID_RESPONSE" | "RATE_LIMITED" | "CLEANUP_FAILED";
+export type ErrorCode = "UNSUPPORTED_FORMAT" | "FILE_TOO_LARGE" | "VIDEO_TOO_LONG" | "INVALID_INPUT" | "UPLOAD_FAILED" | "AI_FAILED" | "AI_TIMEOUT" | "INVALID_RESPONSE" | "RATE_LIMITED" | "CLEANUP_FAILED" | "UNAUTHENTICATED" | "DB_ERROR";
 
 export class AppError extends Error {
   constructor(public code: ErrorCode, message: string, public status = 500) { super(message); }
